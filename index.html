@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Security Alert</title>
+<title>Security Scan</title>
 
 <style>
   body {
@@ -12,118 +12,151 @@
     color: #00ff66;
     font-family: monospace;
     height: 100vh;
+    overflow: hidden;
+  }
+
+  .ui {
+    position: relative;
+    z-index: 2;
+    height: 100vh;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
+    justify-content: center;
     text-align: center;
   }
 
-  .box {
-    width: 90%;
-    max-width: 420px;
-  }
-
-  .blink {
-    animation: blink 1s infinite;
-  }
-
-  @keyframes blink {
-    50% { opacity: 0.3; }
-  }
-
-  .hidden {
-    display: none;
-  }
+  .blink { animation: blink 1s infinite; }
+  @keyframes blink { 50% { opacity: .3; } }
 
   .frame {
-    margin: 20px auto;
-    width: 100%;
+    width: min(92%, 420px);
     height: 220px;
     border: 2px solid #00ff66;
+    margin: 12px auto;
     position: relative;
     overflow: hidden;
   }
 
   .scan {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 6px;
+    left: 0; width: 100%; height: 6px;
     background: #00ff66;
     animation: scan 2s linear infinite;
   }
+  @keyframes scan { from { top: 0; } to { top: 100%; } }
 
-  @keyframes scan {
-    from { top: 0; }
-    to { top: 100%; }
+  .logs {
+    position: absolute;
+    top: -100%;
+    left: 0;
+    right: 0;
+    height: 200%;
+    opacity: .7;
+    z-index: 1;
+    animation: logs 10s linear infinite;
+    pointer-events: none;
   }
+  @keyframes logs { from { transform: translateY(0); } to { transform: translateY(50%); } }
 
-  button {
-    margin-top: 20px;
-    padding: 12px 25px;
-    background: #00ff66;
-    color: black;
-    border: none;
-    font-size: 16px;
-    cursor: pointer;
+  .log { white-space: nowrap; font-size: 12px; line-height: 1.6; }
+
+  .flash {
+    position: fixed; inset: 0;
+    background: white; opacity: 0;
+    z-index: 5; pointer-events: none;
+    transition: opacity .08s ease;
+  }
+  .flash.on { opacity: 1; }
+
+  .glitch {
+    position: fixed; inset: 0;
+    background: black; opacity: 0;
+    z-index: 6; pointer-events: none;
+  }
+  .glitch.on {
+    animation: glitch .4s steps(2) infinite;
+    opacity: .9;
+  }
+  @keyframes glitch {
+    0% { transform: translate(0,0); }
+    20% { transform: translate(-6px,3px); }
+    40% { transform: translate(6px,-3px); }
+    60% { transform: translate(-4px,-2px); }
+    80% { transform: translate(4px,2px); }
+    100% { transform: translate(0,0); }
   }
 </style>
 </head>
 
 <body>
 
-<div class="box">
+<div class="logs" id="logs"></div>
+<div class="flash" id="flash"></div>
+<div class="glitch" id="glitch"></div>
 
-  <div id="step1">
-    <p class="blink">⚠️ Camera permission required</p>
-    <p>Tap to allow access</p>
-    <button onclick="start()">ALLOW</button>
+<div class="ui">
+  <p class="blink">⚠️ Camera access granted</p>
+
+  <div class="frame">
+    <div class="scan"></div>
   </div>
 
-  <div id="step2" class="hidden">
-    <p>Camera access granted ✅</p>
-    <div class="frame">
-      <div class="scan"></div>
-    </div>
-    <p id="status">Initializing camera...</p>
-  </div>
-
+  <p id="status">Initializing camera module...</p>
 </div>
 
 <script>
-function start() {
-  document.getElementById("step1").classList.add("hidden");
-  document.getElementById("step2").classList.remove("hidden");
+const status = document.getElementById("status");
+const flash = document.getElementById("flash");
+const glitch = document.getElementById("glitch");
+const logs = document.getElementById("logs");
 
-  // 📳 vibration after interaction
-  if (navigator.vibrate) {
-    navigator.vibrate([200, 100, 200]);
+// Generate LOTS of scrolling numbers/logs
+function randHex(len=8){
+  return [...Array(len)].map(()=>Math.floor(Math.random()*16).toString(16)).join('');
+}
+let logHTML = "";
+for (let i=0;i<300;i++){
+  logHTML += `<div class="log">ID:${randHex(6)}  PKT:${randHex(10)}  SEQ:${Math.floor(Math.random()*999999)}</div>`;
+}
+logs.innerHTML = logHTML;
+
+const messages = [
+  "Detecting face...",
+  "Adjusting exposure...",
+  "Capturing frame...",
+  "Uploading image...",
+  "Analyzing data..."
+];
+
+let i = 0;
+const interval = setInterval(()=>{
+  const msg = messages[i % messages.length];
+  status.textContent = msg;
+
+  // Double flash on "Capturing frame..."
+  if(msg === "Capturing frame..."){
+    flash.classList.add("on");
+    setTimeout(()=>flash.classList.remove("on"),80);
+    setTimeout(()=>flash.classList.add("on"),160);
+    setTimeout(()=>flash.classList.remove("on"),240);
   }
 
-  const status = document.getElementById("status");
-  const messages = [
-    "Adjusting focus...",
-    "Detecting face...",
-    "Capturing image...",
-    "Uploading frame...",
-    "Analyzing data..."
-  ];
+  i++;
+  if(i>18){
+    clearInterval(interval);
+    status.textContent = ""; // remove status
+    logs.style.animationPlayState = "paused"; // stop logs
+    document.querySelector('.scan').style.animationPlayState = "paused"; // stop scan
+    glitch.classList.add("on"); // permanent glitch
+  }
+},700);
 
-  let i = 0;
-  const interval = setInterval(() => {
-    status.textContent = messages[i % messages.length];
-    i++;
+// Power vibration on first touch anywhere
+document.addEventListener("touchstart", ()=>{
+  if(navigator.vibrate) navigator.vibrate([300,120,300,120,500,200,400]);
+},{once:true});
 
-    if (navigator.vibrate) navigator.vibrate(60);
-
-    if (i > 10) {
-      clearInterval(interval);
-      status.innerHTML = "<br>😌 Relax… it’s just a prank!";
-      if (navigator.vibrate) navigator.vibrate(500);
-    }
-  }, 700);
-}
 </script>
 
 </body>
