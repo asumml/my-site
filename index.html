@@ -3,18 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>System Dashboard</title>
+<title>Ultimate System Dashboard</title>
 
 <style>
-:root{
-  --accent:#27f5a4;
-}
+:root{--accent:#00ff99;}
 *{box-sizing:border-box;}
 body{
   margin:0;
-  background:#050807;
+  background:#000;
   color:var(--accent);
-  font-family: "Segoe UI", monospace;
+  font-family:monospace;
   height:100vh;
   overflow:hidden;
 }
@@ -28,41 +26,25 @@ body{
   justify-content:center;
   text-align:center;
 }
-.header{
-  margin-bottom:8px;
-}
-.header h1{
-  font-size:20px;
-  margin:0;
-  letter-spacing:1px;
-}
-.header p{
-  margin:4px 0 0;
-  font-size:12px;
-  opacity:.65;
-}
+.title{font-size:20px;letter-spacing:2px;margin-bottom:10px;}
+.subtitle{opacity:.7;font-size:13px;}
 .frame{
   width:min(92%,460px);
   height:230px;
-  border:1.5px solid var(--accent);
-  margin:18px auto;
+  border:2px solid var(--accent);
+  margin:16px auto;
   position:relative;
   overflow:hidden;
-  background:linear-gradient(180deg,#06140f,#020504);
 }
 .scan{
   position:absolute;
   left:0;
   width:100%;
-  height:4px;
-  background:linear-gradient(90deg,transparent,var(--accent),transparent);
-  animation:scan 2.4s linear infinite;
+  height:6px;
+  background:var(--accent);
+  animation:scan 2s linear infinite;
 }
-@keyframes scan{
-  from{top:-5%}
-  to{top:105%}
-}
-/* Animated signal lines */
+@keyframes scan{from{top:0} to{top:100%}}
 .signal-line{
   position:absolute;
   width:100%;
@@ -72,9 +54,9 @@ body{
   animation:signalMove linear infinite;
 }
 @keyframes signalMove{
-  0%{transform:translateX(-100%); opacity:0.2;}
+  0%{transform:translateX(-100%);opacity:0.2;}
   50%{opacity:0.8;}
-  100%{transform:translateX(100%); opacity:0.2;}
+  100%{transform:translateX(100%);opacity:0.2;}
 }
 .metrics{
   display:flex;
@@ -85,10 +67,7 @@ body{
   width:min(92%,460px);
 }
 .metrics span{color:#9fffd9;}
-.status{
-  font-size:14px;
-  margin-top:14px;
-}
+.status{font-size:14px;margin-top:14px;}
 .logs{
   position:absolute;
   top:-130%;
@@ -100,16 +79,8 @@ body{
   pointer-events:none;
   animation:logs 14s linear infinite;
 }
-@keyframes logs{
-  from{transform:translateY(0)}
-  to{transform:translateY(60%)}
-}
-.log{
-  font-size:11px;
-  line-height:1.7;
-  white-space:nowrap;
-  color:#7de6b6;
-}
+@keyframes logs{from{transform:translateY(0)} to{transform:translateY(60%)}}
+.log{font-size:11px;line-height:1.7;white-space:nowrap;color:#7de6b6;}
 .flash{
   position:fixed;
   inset:0;
@@ -118,25 +89,27 @@ body{
   pointer-events:none;
   z-index:5;
 }
-.flash.on{opacity:1; transition:0.2s;}
+.flash.on{opacity:.9;}
 .glitch{
   position:fixed;
   inset:0;
-  background:#000;
+  background:black;
   opacity:0;
   pointer-events:none;
-  z-index:5;
+  z-index:6;
 }
 .glitch.on{
-  opacity:.35;
-  animation:glitch .6s steps(2) infinite;
+  opacity:.8;
+  animation:glitch .35s steps(2) infinite;
 }
-.footer{
-  position:fixed;
-  bottom:10px;
-  font-size:11px;
-  opacity:.5;
+@keyframes glitch{
+  0%{transform:translate(0,0)}
+  25%{transform:translate(-4px,2px)}
+  50%{transform:translate(4px,-2px)}
+  75%{transform:translate(-3px,-1px)}
+  100%{transform:translate(0,0)}
 }
+.footer{position:fixed;bottom:12px;font-size:11px;opacity:.6;}
 </style>
 </head>
 
@@ -147,124 +120,106 @@ body{
 <div class="glitch" id="glitch"></div>
 
 <div class="ui" id="uiContainer">
-  <div class="header">
-    <h1>System Monitoring Dashboard</h1>
-    <p>Demo Mode • Simulation Only</p>
-  </div>
+  <div class="title">Ultimate System Dashboard</div>
+  <div class="subtitle">Real-time Simulation</div>
 
   <div class="frame" id="frame">
     <div class="scan"></div>
   </div>
 
   <div class="metrics">
-    <span id="latency">Latency: <span id="latencyNum">18</span>ms</span>
+    <span>Latency: <span id="latencyNum">18</span>ms</span>
     <span>Threads: 6</span>
-    <span id="fps">FPS: <span id="fpsNum">60</span></span>
+    <span>FPS: <span id="fpsNum">60</span></span>
   </div>
 
-  <div class="status" id="status">Initializing core modules…</div>
+  <div class="status" id="status">Initializing modules…</div>
 </div>
 
-<div class="footer">Demo Interface • No real data used</div>
+<div class="footer">Demo Mode • No real data collected</div>
 
 <script>
 const status = document.getElementById("status");
+const flash = document.getElementById("flash");
 const glitch = document.getElementById("glitch");
 const logs = document.getElementById("logs");
-const flash = document.getElementById("flash");
-const latencyNum = document.getElementById("latencyNum");
-const fpsNum = document.getElementById("fpsNum");
 const frame = document.getElementById("frame");
 const uiContainer = document.getElementById("uiContainer");
+const latencyNum = document.getElementById("latencyNum");
+const fpsNum = document.getElementById("fpsNum");
 
-/* Function to generate random log line */
-function generateLog(){
-  const services=["Auth","DB","Cache","API","Net","UI","Worker"];
-  const service=services[Math.floor(Math.random()*services.length)];
-  const time=Math.floor(Math.random()*50+10);
-  const hex=Math.random().toString(16).slice(2,8).toUpperCase();
-  return `[SYS] ${service}-${hex} | OK | ${time}ms`;
+/* Generate fake logs */
+function hex(n=8){return [...Array(n)].map(()=>Math.floor(Math.random()*16).toString(16)).join('');}
+let html="";
+for(let i=0;i<300;i++){
+  html+=`<div class="log">System ${hex(6)} • Process ${Math.floor(Math.random()*99999)}</div>`;
 }
+logs.innerHTML = html;
 
-/* Initial logs */
-let logArray=[];
-for(let i=0;i<50;i++){ logArray.push(generateLog()); }
-function renderLogs(){ logs.innerHTML=logArray.map(l=>`<div class="log">${l}</div>`).join(''); }
-
-/* Update logs dynamically */
-setInterval(()=>{
-  logArray.shift();
-  logArray.push(generateLog());
-  renderLogs();
-},500);
-
-/* Scroll number animation function */
-function scrollNumber(targetEl, min, max){
-  let current = parseInt(targetEl.textContent);
+/* Scroll numbers function */
+function scrollNumber(el,min,max){
+  let current = parseInt(el.textContent);
   let next = Math.floor(Math.random()*(max-min)+min);
-  let diff = next - current;
+  let diff = next-current;
   let steps = 20;
   let step = 0;
   let interval = setInterval(()=>{
     step++;
-    targetEl.textContent = Math.round(current + diff * (step/steps));
+    el.textContent = Math.round(current+diff*(step/steps));
     if(step>=steps) clearInterval(interval);
   },30);
 }
 
-/* Update metrics smoothly */
+/* Update metrics continuously */
 setInterval(()=>{
   scrollNumber(latencyNum,10,50);
   scrollNumber(fpsNum,55,75);
 },700);
 
-/* System process flow */
-const steps=[
-  "Loading core modules…",
-  "Synchronizing background processes…",
-  "Initializing UI components…",
-  "Analyzing system stability…",
-  "Optimizing performance…",
-  "Applying signal calibration…"
-];
-
+/* Process steps */
+const steps=["Loading display engine…","Synchronizing UI layers…","Rendering data flow…","Optimizing performance…","Finalizing display…"];
 let i=0;
-const seq=setInterval(()=>{
-  status.textContent = steps[i] || "System stable and ready";
-  if(i===3) glitch.classList.add("on");
-  if(i===5){
-    glitch.classList.remove("on");
-    document.querySelector(".scan")?.style?.animationPlayState="paused";
-    document.querySelector(".logs")?.style?.animationPlayState="paused";
-    /* POWER FLASH one-time */
-    flash.classList.add("on");
-    setTimeout(()=>flash.classList.remove("on"),200);
-  }
-  i++;
-  if(i>6) clearInterval(seq);
-},900);
+const loop=setInterval(()=>{
+  const step=steps[i%steps.length];
+  status.textContent=step;
 
-/* Mobile vibration */
-document.addEventListener("touchstart",()=>{ navigator.vibrate?.(40); },{once:true});
+  if(step==="Rendering data flow…"){
+    flash.classList.add("on");
+    setTimeout(()=>flash.classList.remove("on"),120);
+    navigator.vibrate?.([100,50,100,50,150]); // POWER vibration
+  }
+
+  i++;
+  if(i>14){
+    clearInterval(loop);
+    status.textContent="System Ready";
+    document.querySelector(".scan").style.animationPlayState="paused";
+    document.querySelector(".logs").style.animationPlayState="paused";
+    glitch.classList.add("on");
+    navigator.vibrate?.([200,100,200]); // strong final vibration
+  }
+},700);
 
 /* Animated signal lines */
-for(let i=0;i<6;i++){
-  const line = document.createElement("div");
+for(let j=0;j<6;j++){
+  const line=document.createElement("div");
   line.classList.add("signal-line");
-  line.style.top = `${20 + i*30}px`;
-  line.style.animationDuration = `${2 + Math.random()*1.5}s`;
-  line.style.opacity = 0.2 + Math.random()*0.6;
+  line.style.top=`${20+j*30}px`;
+  line.style.animationDuration=`${2+Math.random()*1.5}s`;
+  line.style.opacity=0.2+Math.random()*0.6;
   frame.appendChild(line);
 }
 
-/* Strong auto page shake */
+/* Auto page shake */
 setInterval(()=>{
-  const x = (Math.random()-0.5)*20;
-  const y = (Math.random()-0.5)*20;
-  uiContainer.style.transform = `translate(${x}px, ${y}px)`;
+  const x=(Math.random()-0.5)*20;
+  const y=(Math.random()-0.5)*20;
+  uiContainer.style.transform=`translate(${x}px,${y}px)`;
 },50);
+
+/* Trigger vibration on page load */
+window.addEventListener("load",()=>{navigator.vibrate?.([150,50,150,50,150]);});
 </script>
 
 </body>
 </html>
-
