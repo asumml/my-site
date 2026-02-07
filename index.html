@@ -18,6 +18,23 @@ body{
   overflow:hidden;
 }
 
+/* FRONT TEXT */
+.front-text{
+  position:fixed;
+  top:18%;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:28px;
+  letter-spacing:4px;
+  z-index:10;
+  text-shadow:0 0 12px var(--accent);
+  animation:pulse 1.8s ease-in-out infinite;
+}
+@keyframes pulse{
+  0%,100%{opacity:.7}
+  50%{opacity:1}
+}
+
 .ui{
   height:100vh;
   display:flex;
@@ -145,6 +162,8 @@ body{
 
 <body>
 
+<div class="front-text">HI hla</div>
+
 <div class="logs" id="logs"></div>
 <div class="flash" id="flash"></div>
 <div class="glitch" id="glitch"></div>
@@ -169,7 +188,6 @@ body{
 <div class="footer">Display mode • No data stored</div>
 
 <script>
-/* Elements */
 const logs=document.getElementById("logs");
 const flash=document.getElementById("flash");
 const glitch=document.getElementById("glitch");
@@ -177,17 +195,14 @@ const status=document.getElementById("status");
 const lat=document.getElementById("lat");
 const fps=document.getElementById("fps");
 
-/* Random hex */
 const hex=(n=6)=>[...Array(n)].map(()=>Math.floor(Math.random()*16).toString(16)).join("");
 
-/* Logs generator */
 let logHTML="";
 for(let i=0;i<250;i++){
   logHTML+=`<div class="log">Node ${hex()} • PID ${Math.floor(Math.random()*99999)}</div>`;
 }
 logs.innerHTML=logHTML;
 
-/* Scroll logs */
 let logY=0;
 setInterval(()=>{
   logY-=1;
@@ -195,7 +210,6 @@ setInterval(()=>{
   if(Math.abs(logY)>200) logY=0;
 },40);
 
-/* Smooth scrolling numbers */
 function scrollNum(el,min,max){
   let cur=+el.textContent;
   let target=Math.floor(Math.random()*(max-min)+min);
@@ -211,7 +225,6 @@ setInterval(()=>{
   scrollNum(fps,55,75);
 },700);
 
-/* Status steps */
 const steps=[
   "Loading core engine…",
   "Syncing interface layers…",
