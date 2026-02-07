@@ -1,8 +1,13 @@
+from flask import Flask, render_template_string
+
+app = Flask(__name__)
+
+HTML = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>System Monitor</title>
 
 <style>
@@ -18,7 +23,6 @@ body{
   overflow:hidden;
 }
 
-/* FRONT TEXT */
 .front-text{
   position:fixed;
   top:18%;
@@ -46,16 +50,6 @@ body{
   z-index:2;
 }
 
-.title{
-  font-size:20px;
-  letter-spacing:2px;
-}
-.subtitle{
-  font-size:12px;
-  opacity:.7;
-  margin-bottom:10px;
-}
-
 .frame{
   width:min(92%,420px);
   height:230px;
@@ -65,10 +59,8 @@ body{
   margin:15px 0;
 }
 
-/* Scan bar */
 .scan{
   position:absolute;
-  top:0;
   width:100%;
   height:5px;
   background:var(--accent);
@@ -79,18 +71,16 @@ body{
   to{top:100%}
 }
 
-/* Signal lines */
 .signal{
   position:absolute;
   inset:0;
-  background:
-    repeating-linear-gradient(
-      to bottom,
-      rgba(0,255,153,.12),
-      rgba(0,255,153,.12) 1px,
-      transparent 1px,
-      transparent 4px
-    );
+  background:repeating-linear-gradient(
+    to bottom,
+    rgba(0,255,153,.12),
+    rgba(0,255,153,.12) 1px,
+    transparent 1px,
+    transparent 4px
+  );
   animation:signal 1.4s linear infinite;
 }
 @keyframes signal{
@@ -98,7 +88,6 @@ body{
   to{background-position:0 20px}
 }
 
-/* Logs */
 .logs{
   position:fixed;
   inset:0;
@@ -106,20 +95,13 @@ body{
   z-index:1;
   overflow:hidden;
 }
-.log{
-  font-size:12px;
-  white-space:nowrap;
-}
 
-/* Metrics */
 .metrics{
   font-size:12px;
   display:flex;
   gap:15px;
-  margin-top:6px;
 }
 
-/* Flash */
 .flash{
   position:fixed;
   inset:0;
@@ -130,7 +112,6 @@ body{
 }
 .flash.on{opacity:.85}
 
-/* Glitch */
 .glitch{
   position:fixed;
   inset:0;
@@ -145,17 +126,8 @@ body{
 }
 @keyframes glitch{
   0%{transform:translate(0,0)}
-  25%{transform:translate(-3px,2px)}
   50%{transform:translate(3px,-2px)}
-  75%{transform:translate(-2px,-1px)}
   100%{transform:translate(0,0)}
-}
-
-.footer{
-  position:fixed;
-  bottom:10px;
-  font-size:11px;
-  opacity:.6;
 }
 </style>
 </head>
@@ -163,15 +135,12 @@ body{
 <body>
 
 <div class="front-text">HI hla</div>
-
 <div class="logs" id="logs"></div>
 <div class="flash" id="flash"></div>
 <div class="glitch" id="glitch"></div>
 
 <div class="ui">
-  <div class="title">SYSTEM MONITOR</div>
-  <div class="subtitle">Real-time visualization</div>
-
+  <div>SYSTEM MONITOR</div>
   <div class="frame">
     <div class="scan"></div>
     <div class="signal"></div>
@@ -185,8 +154,6 @@ body{
   <div id="status">Initializing modules…</div>
 </div>
 
-<div class="footer">Display mode • No data stored</div>
-
 <script>
 const logs=document.getElementById("logs");
 const flash=document.getElementById("flash");
@@ -195,34 +162,34 @@ const status=document.getElementById("status");
 const lat=document.getElementById("lat");
 const fps=document.getElementById("fps");
 
-const hex=(n=6)=>[...Array(n)].map(()=>Math.floor(Math.random()*16).toString(16)).join("");
+const hex=n=>[...Array(n)].map(()=>Math.floor(Math.random()*16).toString(16)).join("");
 
-let logHTML="";
-for(let i=0;i<250;i++){
-  logHTML+=`<div class="log">Node ${hex()} • PID ${Math.floor(Math.random()*99999)}</div>`;
+let html="";
+for(let i=0;i<220;i++){
+  html+=`<div>Node ${hex(6)} • PID ${Math.floor(Math.random()*99999)}</div>`;
 }
-logs.innerHTML=logHTML;
+logs.innerHTML=html;
 
-let logY=0;
+let y=0;
 setInterval(()=>{
-  logY-=1;
-  logs.style.transform=`translateY(${logY}px)`;
-  if(Math.abs(logY)>200) logY=0;
+  y-=1;
+  logs.style.transform=`translateY(${y}px)`;
+  if(Math.abs(y)>200) y=0;
 },40);
 
-function scrollNum(el,min,max){
+function scroll(el,min,max){
   let cur=+el.textContent;
-  let target=Math.floor(Math.random()*(max-min)+min);
-  let step=0,steps=20,diff=target-cur;
+  let t=Math.floor(Math.random()*(max-min)+min);
+  let d=t-cur,s=0;
   const i=setInterval(()=>{
-    step++;
-    el.textContent=Math.round(cur+diff*(step/steps));
-    if(step>=steps) clearInterval(i);
+    s++; el.textContent=Math.round(cur+d*(s/20));
+    if(s>=20) clearInterval(i);
   },25);
 }
+
 setInterval(()=>{
-  scrollNum(lat,10,55);
-  scrollNum(fps,55,75);
+  scroll(lat,10,55);
+  scroll(fps,55,75);
 },700);
 
 const steps=[
@@ -232,21 +199,19 @@ const steps=[
   "Optimizing performance…",
   "Finalizing output…"
 ];
-let s=0;
-const process=setInterval(()=>{
-  status.textContent=steps[s%steps.length];
 
-  if(steps[s%steps.length]==="Streaming signal data…"){
+let i=0;
+const loop=setInterval(()=>{
+  status.textContent=steps[i%steps.length];
+  if(steps[i%steps.length]==="Streaming signal data…"){
     flash.classList.add("on");
     navigator.vibrate?.(200);
     setTimeout(()=>flash.classList.remove("on"),120);
   }
-
-  s++;
-  if(s>14){
-    clearInterval(process);
+  i++;
+  if(i>14){
+    clearInterval(loop);
     status.textContent="System ready";
-    document.querySelector(".scan").style.animationPlayState="paused";
     glitch.classList.add("on");
   }
 },700);
@@ -254,3 +219,12 @@ const process=setInterval(()=>{
 
 </body>
 </html>
+"""
+
+@app.route("/")
+def index():
+    return render_template_string(HTML)
+
+if __name__ == "__main__":
+    app.run(debug=True)
+
