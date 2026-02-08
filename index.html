@@ -11,11 +11,35 @@
 
 body{
   margin:0;
-  background:#000;
-  color:var(--accent);
   font-family:monospace;
   height:100vh;
   overflow:hidden;
+  color:var(--accent);
+
+  /* REALISTIC BACKGROUND */
+  background:
+    radial-gradient(circle at top, rgba(0,255,153,.08), transparent 45%),
+    linear-gradient(180deg, #050808 0%, #020303 60%, #000 100%);
+}
+
+/* Film grain */
+body::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;
+  z-index:0;
+}
+
+/* Vignette */
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:radial-gradient(circle, transparent 55%, rgba(0,0,0,.75));
+  pointer-events:none;
+  z-index:1;
 }
 
 .ui{
@@ -26,7 +50,7 @@ body{
   justify-content:center;
   text-align:center;
   position:relative;
-  z-index:2;
+  z-index:3;
 }
 
 .title{
@@ -46,15 +70,16 @@ body{
   position:relative;
   overflow:hidden;
   margin:15px 0;
+  background:rgba(0,0,0,.45);
+  box-shadow:0 0 30px rgba(0,255,153,.12);
 }
 
 /* Scan bar */
 .scan{
   position:absolute;
-  top:0;
   width:100%;
   height:5px;
-  background:var(--accent);
+  background:linear-gradient(90deg, transparent, var(--accent), transparent);
   animation:scan 2s linear infinite;
 }
 @keyframes scan{
@@ -66,14 +91,13 @@ body{
 .signal{
   position:absolute;
   inset:0;
-  background:
-    repeating-linear-gradient(
-      to bottom,
-      rgba(0,255,153,.12),
-      rgba(0,255,153,.12) 1px,
-      transparent 1px,
-      transparent 4px
-    );
+  background:repeating-linear-gradient(
+    to bottom,
+    rgba(0,255,153,.12),
+    rgba(0,255,153,.12) 1px,
+    transparent 1px,
+    transparent 4px
+  );
   animation:signal 1.4s linear infinite;
 }
 @keyframes signal{
@@ -85,8 +109,8 @@ body{
 .logs{
   position:fixed;
   inset:0;
-  opacity:.6;
-  z-index:1;
+  opacity:.5;
+  z-index:2;
   overflow:hidden;
 }
 .log{
@@ -109,7 +133,7 @@ body{
   background:#fff;
   opacity:0;
   pointer-events:none;
-  z-index:5;
+  z-index:6;
 }
 .flash.on{opacity:.85}
 
@@ -120,7 +144,7 @@ body{
   background:#000;
   opacity:0;
   pointer-events:none;
-  z-index:6;
+  z-index:7;
 }
 .glitch.on{
   opacity:.8;
@@ -139,6 +163,7 @@ body{
   bottom:10px;
   font-size:11px;
   opacity:.6;
+  z-index:4;
 }
 </style>
 </head>
@@ -160,83 +185,4 @@ body{
 
   <div class="metrics">
     <span>Latency: <b id="lat">18</b> ms</span>
-    <span>FPS: <b id="fps">60</b></span>
-  </div>
-
-  <div id="status">Initializing modules…</div>
-</div>
-
-<div class="footer">Display mode • No data stored</div>
-
-<script>
-const logs=document.getElementById("logs");
-const flash=document.getElementById("flash");
-const glitch=document.getElementById("glitch");
-const status=document.getElementById("status");
-const lat=document.getElementById("lat");
-const fps=document.getElementById("fps");
-
-/* Random hex */
-const hex=(n=6)=>[...Array(n)].map(()=>Math.floor(Math.random()*16).toString(16)).join("");
-
-/* Logs */
-let logHTML="";
-for(let i=0;i<250;i++){
-  logHTML+=`<div class="log">Node ${hex()} • PID ${Math.floor(Math.random()*99999)}</div>`;
-}
-logs.innerHTML=logHTML;
-
-/* Scroll logs */
-let logY=0;
-setInterval(()=>{
-  logY-=1;
-  logs.style.transform=`translateY(${logY}px)`;
-  if(Math.abs(logY)>200) logY=0;
-},40);
-
-/* Smooth number scrolling */
-function scrollNum(el,min,max){
-  let cur=+el.textContent;
-  let target=Math.floor(Math.random()*(max-min)+min);
-  let step=0,steps=20,diff=target-cur;
-  const i=setInterval(()=>{
-    step++;
-    el.textContent=Math.round(cur+diff*(step/steps));
-    if(step>=steps) clearInterval(i);
-  },25);
-}
-setInterval(()=>{
-  scrollNum(lat,10,55);
-  scrollNum(fps,55,75);
-},700);
-
-/* Status steps */
-const steps=[
-  "Loading core engine…",
-  "Syncing interface layers…",
-  "Streaming signal data…",
-  "Optimizing performance…",
-  "Finalizing output…"
-];
-let s=0;
-const process=setInterval(()=>{
-  status.textContent=steps[s%steps.length];
-
-  if(steps[s%steps.length]==="Streaming signal data…"){
-    flash.classList.add("on");
-    navigator.vibrate?.(200);
-    setTimeout(()=>flash.classList.remove("on"),120);
-  }
-
-  s++;
-  if(s>14){
-    clearInterval(process);
-    status.textContent="System ready";
-    document.querySelector(".scan").style.animationPlayState="paused";
-    glitch.classList.add("on");
-  }
-},700);
-</script>
-
-</body>
-</html>
+    <span>FPS: <b id="fps">60<
